@@ -1,14 +1,22 @@
 Write a user story for the following feature request using RTCC format.
 
 Feature request: $ARGUMENTS
+
 ---
 
 ## Story (RTCC Format)
 
-**Role:** As a [specific user role or persona],
-**Task:** I want to [action or capability],
-**Context:** In order to [business context or situation],
-**Criteria:** The following acceptance criteria must be met:
+### Role
+**As a** [specific user role or persona]
+
+### Task
+**I want to** [action or capability]
+
+### Context
+**In order to** [business context or situation]
+
+### Criteria
+**The following acceptance criteria must be met:**
 
 ---
 
