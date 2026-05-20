@@ -31,11 +31,11 @@ public static class BoardService
     }
 
     public static List<KanbanTask> GetAllTasks(Board board) =>
-        [.. board.Todo, .. board.InProgress, .. board.Done];
+        [.. board.Todo, .. board.InProgress, .. board.Done, .. board.Blocked];
 
     public static (KanbanTask? Task, List<KanbanTask> Column) FindTask(Board board, int id)
     {
-        foreach (var col in new[] { board.Todo, board.InProgress, board.Done })
+        foreach (var col in new[] { board.Todo, board.InProgress, board.Done, board.Blocked })
         {
             var t = col.FirstOrDefault(x => x.Id == id);
             if (t is not null) return (t, col);
@@ -48,6 +48,7 @@ public static class BoardService
         if (board.Todo.Any(t => t.Id == id))       return Column.Todo;
         if (board.InProgress.Any(t => t.Id == id)) return Column.InProgress;
         if (board.Done.Any(t => t.Id == id))       return Column.Done;
+        if (board.Blocked.Any(t => t.Id == id))    return Column.Blocked;
         return null;
     }
 
@@ -56,6 +57,7 @@ public static class BoardService
         Column.Todo       => board.Todo,
         Column.InProgress => board.InProgress,
         Column.Done       => board.Done,
+        Column.Blocked    => board.Blocked,
         _ => throw new ArgumentOutOfRangeException(nameof(column))
     };
 

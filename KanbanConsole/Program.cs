@@ -33,21 +33,23 @@ static void RenderBoard(Board board)
     table.AddColumn(new TableColumn("[yellow bold]📋 To Do[/]").Centered());
     table.AddColumn(new TableColumn("[blue bold]🔄 In Progress[/]").Centered());
     table.AddColumn(new TableColumn("[green bold]✅ Done[/]").Centered());
+    table.AddColumn(new TableColumn("[red bold]🚫 Blocked[/]").Centered());
 
-    int maxRows = Math.Max(board.Todo.Count, Math.Max(board.InProgress.Count, board.Done.Count));
+    int maxRows = new[] { board.Todo.Count, board.InProgress.Count, board.Done.Count, board.Blocked.Count }.Max();
 
     if (maxRows == 0)
     {
-        table.AddRow("[dim]—[/]", "[dim]—[/]", "[dim]—[/]");
+        table.AddRow("[dim]—[/]", "[dim]—[/]", "[dim]—[/]", "[dim]—[/]");
     }
     else
     {
         for (int i = 0; i < maxRows; i++)
         {
-            string todo = i < board.Todo.Count       ? $"[yellow]{board.Todo[i].Id}[/]. {Markup.Escape(board.Todo[i].Title)}"           : "";
-            string wip  = i < board.InProgress.Count ? $"[blue]{board.InProgress[i].Id}[/]. {Markup.Escape(board.InProgress[i].Title)}" : "";
-            string done = i < board.Done.Count       ? $"[green]{board.Done[i].Id}[/]. {Markup.Escape(board.Done[i].Title)}"            : "";
-            table.AddRow(todo, wip, done);
+            string todo    = i < board.Todo.Count       ? $"[yellow]{board.Todo[i].Id}[/]. {Markup.Escape(board.Todo[i].Title)}"           : "";
+            string wip     = i < board.InProgress.Count ? $"[blue]{board.InProgress[i].Id}[/]. {Markup.Escape(board.InProgress[i].Title)}" : "";
+            string done    = i < board.Done.Count       ? $"[green]{board.Done[i].Id}[/]. {Markup.Escape(board.Done[i].Title)}"            : "";
+            string blocked = i < board.Blocked.Count    ? $"[red]{board.Blocked[i].Id}[/]. {Markup.Escape(board.Blocked[i].Title)}"        : "";
+            table.AddRow(todo, wip, done, blocked);
         }
     }
 
@@ -63,7 +65,7 @@ static void AddTask(Board board)
     var column = AnsiConsole.Prompt(
         new SelectionPrompt<string>()
             .Title("Add to column:")
-            .AddChoices("To Do", "In Progress", "Done"));
+            .AddChoices("To Do", "In Progress", "Done", "Blocked"));
 
     BoardService.AddTask(board, title, ColumnFromString(column));
 }
@@ -83,7 +85,7 @@ static void MoveTask(Board board)
     var destination = AnsiConsole.Prompt(
         new SelectionPrompt<string>()
             .Title("Move to:")
-            .AddChoices("To Do", "In Progress", "Done"));
+            .AddChoices("To Do", "In Progress", "Done", "Blocked"));
 
     BoardService.MoveTask(board, id, ColumnFromString(destination));
 }
@@ -106,6 +108,8 @@ static Column ColumnFromString(string name) => name switch
 {
     "To Do"       => Column.Todo,
     "In Progress" => Column.InProgress,
+    "Done"        => Column.Done,
+    "Blocked"     => Column.Blocked,
     _             => Column.Done,
 };
 

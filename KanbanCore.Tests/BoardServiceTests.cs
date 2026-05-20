@@ -163,4 +163,84 @@ public class BoardServiceTests
     {
         Assert.That(BoardService.GetTaskColumn(new Board(), 42), Is.Null);
     }
+
+    // ── Blocked column (AC-1 through AC-7) ──────────────────────────────────
+
+    [Test]
+    public void AddTask_ToBlockedColumn_TaskAppearsInBlockedList()
+    {
+        var board = new Board();
+        var task = BoardService.AddTask(board, "Blocked Task", Column.Blocked);
+        Assert.That(board.Blocked, Has.Count.EqualTo(1));
+        Assert.That(board.Blocked[0].Id, Is.EqualTo(task.Id));
+        Assert.That(board.Todo,       Is.Empty);
+        Assert.That(board.InProgress, Is.Empty);
+        Assert.That(board.Done,       Is.Empty);
+    }
+
+    [Test]
+    public void MoveTask_FromInProgressToBlocked_TaskMovedSuccessfully()
+    {
+        var board = new Board();
+        var task = BoardService.AddTask(board, "Task", Column.InProgress);
+
+        var result = BoardService.MoveTask(board, task.Id, Column.Blocked);
+
+        Assert.That(result,           Is.True);
+        Assert.That(board.Blocked,    Has.Count.EqualTo(1));
+        Assert.That(board.InProgress, Is.Empty);
+    }
+
+    [Test]
+    public void GetAllTasks_BoardWithBlockedTask_IncludesBlockedTask()
+    {
+        var board = new Board();
+        var task = BoardService.AddTask(board, "Blocked", Column.Blocked);
+
+        var all = BoardService.GetAllTasks(board);
+
+        Assert.That(all, Has.Count.EqualTo(1));
+        Assert.That(all[0].Id, Is.EqualTo(task.Id));
+    }
+
+    [Test]
+    public void GetTaskColumn_TaskInBlocked_ReturnsBlocked()
+    {
+        var board = new Board();
+        var task = BoardService.AddTask(board, "Blocked", Column.Blocked);
+        Assert.That(BoardService.GetTaskColumn(board, task.Id), Is.EqualTo(Column.Blocked));
+    }
+
+    [Test]
+    public void MoveTask_AlreadyInBlocked_ReturnsFalse()
+    {
+        var board = new Board();
+        var task = BoardService.AddTask(board, "Blocked", Column.Blocked);
+
+        var result = BoardService.MoveTask(board, task.Id, Column.Blocked);
+
+        Assert.That(result,        Is.False);
+        Assert.That(board.Blocked, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void MoveTask_NonExistentIdToBlocked_ReturnsFalse()
+    {
+        var board = new Board();
+
+        var result = BoardService.MoveTask(board, 99, Column.Blocked);
+
+        Assert.That(result,        Is.False);
+        Assert.That(board.Blocked, Is.Empty);
+    }
+
+    [Test]
+    public void NextId_BoardWithOnlyBlockedTasks_ReturnsMaxIdPlusOne()
+    {
+        var board = new Board();
+        BoardService.AddTask(board, "First",  Column.Blocked);
+        BoardService.AddTask(board, "Second", Column.Blocked);
+
+        Assert.That(BoardService.NextId(board), Is.EqualTo(3));
+    }
 }

@@ -429,3 +429,4 @@ FodyWeavers.xsd
 
 *.lscache
 *.DS_Store
+KanbanConsole/kanban.json
