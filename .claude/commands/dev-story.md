@@ -62,4 +62,28 @@ Deliver:
 Place artifact deliverables in: `artifacts/`
 
 **Project Context & Conventions:** [artifacts/project-reference.md](../artifacts/project-reference.md)
+
+---
+
+## Final Step: Update Project Reference
+
+After all ACs are complete, update `artifacts/project-reference.md` to reflect any changes introduced by this story:
+
+- Update domain model snapshots (`Board`, `Column`, `KanbanTask`) if they changed
+- Update the `BoardService` API table for any new or modified methods
+- Update the test coverage table with new subjects or cases
+- Update the UI section if `Program.cs` behavior changed
+- Add a dated entry to the **Changelog** section summarizing what was added or changed and which story artifact it corresponds to
+
+The changelog entry format is:
+
+```markdown
+### YYYY-MM-DD — [Feature Name]
+
+**Story:** `artifacts/[story-file].md`
+
+[One paragraph summary of what changed and why.]
+
+**Domain / UI / etc.:** bullet list of specific changes
+```
  

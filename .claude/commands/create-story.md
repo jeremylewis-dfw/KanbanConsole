@@ -49,7 +49,17 @@ Requirements for the full set of criteria:
 Stop when the story is fully specified.
 
 ---
+## Final Step: Update Project Reference
 
+After saving the story artifact, add a dated entry to the **Changelog** section of `artifacts/project-reference.md` recording the new story:
+
+```markdown
+### YYYY-MM-DD — [Feature Name]
+
+**Story:** `artifacts/[story-file].md`
+
+Story created. Implementation pending.
+```
 ## Output
 
 Save the story artifact to: `artifacts/`

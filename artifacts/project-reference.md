@@ -33,6 +33,7 @@ public class Board
     public List<KanbanTask> Todo       { get; set; } = [];
     public List<KanbanTask> InProgress { get; set; } = [];
     public List<KanbanTask> Done       { get; set; } = [];
+    public List<KanbanTask> Blocked    { get; set; } = [];
 }
 ```
 
@@ -48,7 +49,7 @@ public record KanbanTask(int Id, string Title);
 ### `Column` — [KanbanCore/Board.cs](../KanbanCore/Board.cs)
 
 ```csharp
-public enum Column { Todo, InProgress, Done }
+public enum Column { Todo, InProgress, Done, Blocked }
 ```
 
 ---
@@ -65,7 +66,7 @@ All methods are `static`. The `Board` object is mutated in place.
 | `GetAllTasks` | `(Board)` | `List<KanbanTask>` | Todo ++ InProgress ++ Done order |
 | `FindTask` | `(Board, int id)` | `(KanbanTask?, List<KanbanTask>)` | Returns task + its backing list |
 | `GetTaskColumn` | `(Board, int id)` | `Column?` | `null` if not found |
-| `GetColumn` | `(Board, Column)` | `List<KanbanTask>` | Direct reference to the board's list |
+| `GetColumn` | `(Board, Column)` | `List<KanbanTask>` | Direct reference to the board's list; handles all four columns including `Blocked` |
 | `NextId` | `(Board)` | `int` | `max(existing ids) + 1`, or `1` for empty board |
 
 ---
@@ -78,7 +79,7 @@ Top-level statements; no class wrapper. Key behaviors:
 - Menu actions: **Add task**, **Move task**, **Delete task**, **Quit**.
 - `Save(board)` is called after every mutating action and on Quit.
 - `Load()` reads `kanban.json` from the working directory; returns a new `Board` on any failure.
-- `ColumnFromString(string)` maps display names (`"To Do"`, `"In Progress"`, `"Done"`) to `Column` enum values.
+- `ColumnFromString(string)` maps display names (`"To Do"`, `"In Progress"`, `"Done"`, `"Blocked"`) to `Column` enum values. Each case is explicit; the wildcard fallback maps to `Column.Done`.
 
 ---
 
@@ -92,12 +93,12 @@ Top-level statements; no class wrapper. Key behaviors:
 
 | Subject | Cases covered |
 |---------|---------------|
-| `AddTask` | Correct column placement (parameterized), Id assignment, Id uniqueness, title trimming |
-| `MoveTask` | Happy path move, return `true` on success, return `false` for missing id, return `false` when already in destination, no duplication |
+| `AddTask` | Correct column placement (parameterized: Todo, InProgress, Done, Blocked), Id assignment, Id uniqueness, title trimming |
+| `MoveTask` | Happy path move, return `true` on success, return `false` for missing id, return `false` when already in destination (including Blocked), no duplication, move to/from Blocked |
 | `DeleteTask` | Removes from board, returns `true` on success, returns `false` for missing id |
-| `GetAllTasks` | Returns tasks across all columns, empty for new board |
-| `NextId` | Returns 1 for empty board, returns max+1 |
-| `GetTaskColumn` | Returns correct column, returns `null` for missing id |
+| `GetAllTasks` | Returns tasks across all columns including Blocked, empty for new board |
+| `NextId` | Returns 1 for empty board, returns max+1, board with only Blocked tasks |
+| `GetTaskColumn` | Returns correct column (all four including Blocked), returns `null` for missing id |
 
 ---
 
@@ -142,3 +143,30 @@ dotnet test
 # Run tests with output
 dotnet test --logger "console;verbosity=normal"
 ```
+
+---
+
+## Changelog
+
+### 2026-05-20 — Blocked Column
+
+**Stories:** `artifacts/story-blocked-status.md` (domain), `artifacts/story-blocked-status-ui.md` (UI)
+
+Added a fourth `Blocked` column to represent tasks that cannot proceed due to an external dependency or impediment.
+
+**Domain (`KanbanCore`):**
+
+- `Column` enum extended with `Blocked`.
+- `Board` class gains a `Blocked` property (`List<KanbanTask>`), serialized as part of `kanban.json`.
+- `GetAllTasks` now includes `board.Blocked` (Todo → InProgress → Done → Blocked order).
+- `FindTask` searches `board.Blocked` alongside the other three lists.
+- `GetTaskColumn` returns `Column.Blocked` for tasks residing in that list.
+- `GetColumn` handles `Column.Blocked`; the exhaustive switch no longer throws on it.
+- 7 new NUnit tests added to `BoardServiceTests.cs` (total: 27). All pass.
+
+**UI (`KanbanConsole/Program.cs`):**
+
+- `RenderBoard` renders a fourth "🚫 Blocked" column (red header). `maxRows` calculation includes `board.Blocked.Count`. Empty-board placeholder row extended to four cells.
+- `AddTask` column prompt includes "Blocked" as a selectable destination.
+- `MoveTask` destination prompt includes "Blocked". Blocked tasks appear in the task-selection list via `GetAllTasks`.
+- `ColumnFromString` has an explicit `"Blocked" => Column.Blocked` case; no silent fallthrough to the wildcard default.
